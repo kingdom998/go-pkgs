@@ -7,7 +7,7 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	amqp "github.com/rabbitmq/amqp091-go"
 
-	"kingdom.io/pkgs/conf"
+	"github.com/kingdom/go-pkgs/conf"
 )
 
 type rabbitMQ struct {

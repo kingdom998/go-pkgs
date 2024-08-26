@@ -9,7 +9,7 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	_ "github.com/joho/godotenv/autoload"
 
-	"kingdom.io/pkgs/conf"
+	"github.com/kingdom/go-pkgs/conf"
 )
 
 var (
