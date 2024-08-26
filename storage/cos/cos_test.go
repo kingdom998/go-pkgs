@@ -34,5 +34,14 @@ func TestListBuckets(t *testing.T) {
 	for _, bucket := range buckets {
 		fmt.Println(bucket)
 	}
+}
 
+func TestDownloadFile(t *testing.T) {
+	ctx := context.Background()
+	client := New(config)
+	filepath := "webui/011c0b9e-dd65-47d1-b8d7-df0e708c1401.png"
+	err := client.DownloadFile(ctx, filepath, "ai.png")
+	if err != nil {
+		t.Error(err)
+	}
 }
