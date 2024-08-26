@@ -13,7 +13,7 @@ import (
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"gorm.io/driver/mysql"
 
-	"github.com/kingdom/go-pkgs/conf"
+	"github.com/kingdom998/go-pkgs/conf"
 )
 
 type COS struct {

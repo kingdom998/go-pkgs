@@ -1,4 +1,4 @@
-module github.com/kingdom/go-pkgs
+module github.com/kingdom998/go-pkgs
 
 go 1.22.5
 

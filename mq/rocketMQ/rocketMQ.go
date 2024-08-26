@@ -10,7 +10,7 @@ import (
 	"github.com/apache/rocketmq-client-go/v2/producer"
 	"github.com/go-kratos/kratos/v2/log"
 
-	"github.com/kingdom/go-pkgs/conf"
+	"github.com/kingdom998/go-pkgs/conf"
 )
 
 type rocketMQ struct {
