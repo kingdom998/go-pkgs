@@ -1,6 +1,7 @@
 package cos
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net/http"
@@ -38,6 +39,12 @@ func (c *cosClient) UploadFile(ctx context.Context, localFilePath, cosFilePath s
 
 func (c *cosClient) DownloadFile(ctx context.Context, filename, localpath string) (err error) {
 	_, err = c.cos.Object.GetToFile(ctx, filename, filepath.Base(localpath), nil)
+	return err
+}
+
+func (c *cosClient) UploadStream(ctx context.Context, cosFilePath string, body []byte) error {
+	reader := bytes.NewReader(body)
+	_, err := c.cos.Object.Put(ctx, cosFilePath, reader, nil)
 	return err
 }
 
