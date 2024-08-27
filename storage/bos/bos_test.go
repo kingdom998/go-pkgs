@@ -40,10 +40,29 @@ func TestUploadFromFile(t *testing.T) {
 	ctx := context.Background()
 	localFilePath := "bos_test.go"
 	objectPath := "Stable-diffusion/" + localFilePath
-	err := client.UploadFromFile(ctx, objectPath, localFilePath)
+	result, err := client.UploadFromFile(ctx, objectPath, localFilePath)
 	if err != nil {
 		t.Error(err)
+		return
 	}
+	t.Log(result)
+}
+
+func TestUploadFromBytes(t *testing.T) {
+	ctx := context.Background()
+	localFilePath := "bos_test.go"
+	objectPath := "Stable-diffusion/" + localFilePath
+	body, err := os.ReadFile(localFilePath)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	result, err := client.UploadFromBytes(ctx, objectPath, body)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	t.Log(result)
 }
 
 func TestDownloadFile(t *testing.T) {

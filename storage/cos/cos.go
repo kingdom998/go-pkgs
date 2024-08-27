@@ -4,23 +4,29 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/kingdom998/go-pkgs/conf"
-	"github.com/tencentyun/cos-go-sdk-v5"
 	"net/http"
 	"net/url"
 	"path/filepath"
+
+	"github.com/tencentyun/cos-go-sdk-v5"
 )
 
-type cosClient struct {
+type Config struct {
+	Host      string `json:"host,omitempty"`
+	Region    string `json:"region,omitempty"`
+	Bucket    string `json:"bucket,omitempty"`
+	SecretID  string `json:"secret_id,omitempty"`
+	SecretKey string `json:"secret_key,omitempty"`
+}
+
+type storage struct {
 	cos *cos.Client
 }
 
-func New(config conf.COS) *cosClient {
-	rawURL := fmt.Sprintf(config.Host, config.Bucket, config.Region)
-	fmt.Println(rawURL)
-	u, _ := url.Parse(rawURL)
+func NewClient(config Config) *storage {
+	u, _ := url.Parse(config.Host)
 	b := &cos.BaseURL{BucketURL: u}
-	return &cosClient{
+	return &storage{
 		cos: cos.NewClient(b, &http.Client{
 			Transport: &cos.AuthorizationTransport{
 				SecretID:  config.SecretID,
@@ -31,29 +37,32 @@ func New(config conf.COS) *cosClient {
 
 }
 
-func (c *cosClient) ListBuckets(ctx context.Context) (buckets []string, err error) {
-	s, _, err := c.cos.Service.Get(ctx)
+func (s *storage) ListBuckets(ctx context.Context) (buckets []string, err error) {
+	b, _, err := s.cos.Service.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
-	for _, b := range s.Buckets {
+	for _, b := range b.Buckets {
 		buckets = append(buckets, b.Name)
 	}
 	return
 }
 
-func (c *cosClient) UploadFromFile(ctx context.Context, cosFilePath, localFilePath string) error {
-	_, err := c.cos.Object.PutFromFile(ctx, cosFilePath, localFilePath, nil)
-	return err
+func (s *storage) UploadFromFile(ctx context.Context, cosFilePath, localFilePath string) (string, error) {
+	result, err := s.cos.Object.PutFromFile(ctx, cosFilePath, localFilePath, nil)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("https://%s/%s", result.Request.URL.Host, cosFilePath), err
 }
 
-func (c *cosClient) UploadFromBytes(ctx context.Context, cosFilePath string, body []byte) error {
+func (s *storage) UploadFromBytes(ctx context.Context, cosFilePath string, body []byte) (string, error) {
 	reader := bytes.NewReader(body)
-	_, err := c.cos.Object.Put(ctx, cosFilePath, reader, nil)
-	return err
+	result, err := s.cos.Object.Put(ctx, cosFilePath, reader, nil)
+	return fmt.Sprintf("https://%s/%s", result.Request.URL.Host, cosFilePath), err
 }
 
-func (c *cosClient) Download2File(ctx context.Context, filename, localpath string) (err error) {
-	_, err = c.cos.Object.GetToFile(ctx, filename, filepath.Base(localpath), nil)
+func (s *storage) Download2File(ctx context.Context, filename, localpath string) (err error) {
+	_, err = s.cos.Object.GetToFile(ctx, filename, filepath.Base(localpath), nil)
 	return err
 }

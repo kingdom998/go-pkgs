@@ -6,23 +6,33 @@ import (
 
 	"github.com/go-kratos/kratos/v2/log"
 	amqp "github.com/rabbitmq/amqp091-go"
-
-	"github.com/kingdom998/go-pkgs/conf"
 )
+
+type Config struct {
+	Url        string
+	Endpoint   string
+	UserName   string
+	Password   string
+	Vhost      string
+	Exchange   string
+	Topic      string
+	Group      string
+	RetryCount int32
+}
 
 type rabbitMQ struct {
 	log *log.Helper
 
-	topic string
-	ch    *amqp.Channel
+	config *Config
+	ch     *amqp.Channel
 }
 
-func NewRabbitMQ(config *conf.RabbitMQ, logger log.Logger) *rabbitMQ {
+func NewRabbitMQ(config *Config, logger log.Logger) *rabbitMQ {
 	helper := log.NewHelper(log.With(logger, "module", "pkgs/mq/rabbitMQ"))
 	url := fmt.Sprintf(config.Url, config.UserName, config.Password, config.Endpoint, config.Vhost)
 	conn, err := amqp.Dial(url)
 	if err != nil {
-		helper.Fatalf("Failed to connect to RabbitMQ: %s", err)
+		helper.Fatalf("Failed to connect to Config: %s", err)
 	}
 
 	// 建立通道
@@ -31,16 +41,16 @@ func NewRabbitMQ(config *conf.RabbitMQ, logger log.Logger) *rabbitMQ {
 		helper.Fatalf("Failed to open a channel: %s", err)
 	}
 	return &rabbitMQ{
-		ch:    ch,
-		topic: config.Route,
-		log:   helper,
+		ch:     ch,
+		config: config,
+		log:    helper,
 	}
 }
 
-func (r *rabbitMQ) Publish(ctx context.Context, topic string, msg []byte) error {
+func (r *rabbitMQ) Publish(ctx context.Context, msg []byte) error {
 	// 声明消息队列
 	_, err := r.ch.QueueDeclare(
-		topic,
+		r.config.Topic,
 		false,
 		false,
 		false,
@@ -53,10 +63,10 @@ func (r *rabbitMQ) Publish(ctx context.Context, topic string, msg []byte) error 
 
 	// 发布消息到指定的消息队列
 	err = r.ch.Publish(
-		"",    // exchange
-		topic, // routing key
-		false, // mandatory
-		false, // immediate
+		"",             // exchange
+		r.config.Topic, // routing key
+		false,          // mandatory
+		false,          // immediate
 		amqp.Publishing{
 			ContentType: "text/plain",
 			Body:        msg,
@@ -64,16 +74,16 @@ func (r *rabbitMQ) Publish(ctx context.Context, topic string, msg []byte) error 
 	return err
 }
 
-func (r *rabbitMQ) Subscribe(ctx context.Context, topic string, callback func(context.Context, []byte) error) error {
+func (r *rabbitMQ) Subscribe(ctx context.Context, callback func(context.Context, []byte) error) error {
 	// 创建消费者并消费指定消息队列中的消息
 	msgList, err := r.ch.Consume(
-		topic, // message-queue
-		"",    // consumer
-		false, // 设置为非自动确认(可根据需求自己选择)
-		false, // exclusive
-		false, // no-local
-		false, // no-wait
-		nil,   // args
+		r.config.Topic, // message-queue
+		"",             // consumer
+		false,          // 设置为非自动确认(可根据需求自己选择)
+		false,          // exclusive
+		false,          // no-local
+		false,          // no-wait
+		nil,            // args
 	)
 
 	for d := range msgList {

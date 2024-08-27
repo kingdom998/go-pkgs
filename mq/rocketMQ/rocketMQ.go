@@ -9,24 +9,32 @@ import (
 	"github.com/apache/rocketmq-client-go/v2/primitive"
 	"github.com/apache/rocketmq-client-go/v2/producer"
 	"github.com/go-kratos/kratos/v2/log"
-
-	"github.com/kingdom998/go-pkgs/conf"
 )
+
+type Config struct {
+	Endpoint   string `json:"endpoint,omitempty"`
+	SecretKey  string `json:"secret_key,omitempty"`
+	AccessKey  string `json:"access_key,omitempty"`
+	Namespace  string `json:"namespace,omitempty"`
+	Topic      string `json:"topic,omitempty"`
+	Group      string `json:"group,omitempty"`
+	RetryCount int32  `json:"retry_count,omitempty"`
+}
 
 type rocketMQ struct {
 	log *log.Helper
 
-	topic    string
+	config   *Config
 	producer rocketmq.Producer
 	consumer rocketmq.PullConsumer
 }
 
-func NewRocketMQ(config *conf.RocketMQ, logger log.Logger) *rocketMQ {
+func NewRocketMQ(config *Config, logger log.Logger) *rocketMQ {
 	helper := log.NewHelper(log.With(logger, "module", "pkgs/mq/rocketMQ"))
 
 	r := &rocketMQ{
-		topic: config.Topic,
-		log:   helper,
+		config: config,
+		log:    helper,
 	}
 	r.producer = r.newProducer(config)
 	r.consumer = r.newConsumer(config)
@@ -34,7 +42,7 @@ func NewRocketMQ(config *conf.RocketMQ, logger log.Logger) *rocketMQ {
 	return r
 }
 
-func (r *rocketMQ) newProducer(conf *conf.RocketMQ) rocketmq.Producer {
+func (r *rocketMQ) newProducer(conf *Config) rocketmq.Producer {
 	// 创建消息生产者
 	p, err := rocketmq.NewProducer(
 		producer.WithNsResolver(primitive.NewPassthroughResolver([]string{conf.Endpoint})), // 设置服务地址
@@ -58,7 +66,7 @@ func (r *rocketMQ) newProducer(conf *conf.RocketMQ) rocketmq.Producer {
 	return p
 }
 
-func (r *rocketMQ) newConsumer(conf *conf.RocketMQ) rocketmq.PullConsumer {
+func (r *rocketMQ) newConsumer(conf *Config) rocketmq.PullConsumer {
 	var nameSrv, err = primitive.NewNamesrvAddr(conf.Endpoint)
 	if err != nil {
 		r.log.Fatalf("NewNamesrvAddr err: %v", err)
@@ -103,10 +111,10 @@ func (r *rocketMQ) newConsumer(conf *conf.RocketMQ) rocketmq.PullConsumer {
 	return c
 }
 
-func (r *rocketMQ) Publish(ctx context.Context, topic string, body []byte) (err error) {
+func (r *rocketMQ) Publish(ctx context.Context, body []byte) (err error) {
 	// 构造消息内容
 	mq := &primitive.Message{
-		Topic: topic, // 设置topic名称
+		Topic: r.config.Topic, // 设置topic名称
 		Body:  body,
 	}
 	// 发送消息
@@ -121,7 +129,7 @@ func (r *rocketMQ) Publish(ctx context.Context, topic string, body []byte) (err 
 
 }
 
-func (r *rocketMQ) Subscribe(ctx context.Context, topic string, callback func(context.Context, []byte) error) (err error) {
+func (r *rocketMQ) Subscribe(ctx context.Context, callback func(context.Context, []byte) error) (err error) {
 	r.consumer.Start()
 	for {
 		cr, err := r.consumer.Poll(ctx, time.Second*5)

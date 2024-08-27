@@ -42,16 +42,24 @@ func (s *storage) ListBuckets(ctx context.Context) (buckets []string, err error)
 	return
 }
 
-func (s *storage) UploadFromFile(ctx context.Context, cosFilePath, localFilePath string) error {
-	_, err := s.client.ParallelUpload(s.config.Bucket, cosFilePath, localFilePath, "", nil)
-	return err
+func (s *storage) UploadFromFile(ctx context.Context, cosFilePath, localFilePath string) (string, error) {
+	result, err := s.client.ParallelUpload(s.config.Bucket, cosFilePath, localFilePath, "", nil)
+	if err != nil {
+		return "", err
+	}
+
+	return result.Location, nil
 }
 
 func (s *storage) Download2File(ctx context.Context, objectPath, localpath string) (err error) {
 	return s.client.BasicGetObjectToFile(s.config.Bucket, objectPath, localpath)
 }
 
-func (s *storage) UploadFromBytes(ctx context.Context, objectPath string, body []byte) error {
+func (s *storage) UploadFromBytes(ctx context.Context, objectPath string, body []byte) (string, error) {
 	_, err := s.client.PutObjectFromBytes(s.config.Bucket, objectPath, body, nil)
-	return err
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("https://%s/%s/%s", s.config.Endpoint, s.config.Bucket, objectPath), nil
 }
