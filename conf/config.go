@@ -17,6 +17,7 @@ type Config struct {
 	Storage  bos.Config      `json:"storage"`
 	WebUI    http.Config     `json:"webUI"`
 	ComfyUI  http.Config     `json:"comfyUI"`
+	Openai   http.Config     `json:"openai"`
 }
 
 func New(confFile string) *Config {

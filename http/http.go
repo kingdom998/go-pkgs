@@ -1,5 +1,7 @@
 package http
 
 type Config struct {
-	Addr string `json:"addr"`
+	Name     string `json:"name,omitempty"`
+	Endpoint string `json:"endpoint,omitempty"`
+	Addr     string `json:"addr" json:"addr,omitempty"`
 }
