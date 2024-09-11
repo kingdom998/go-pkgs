@@ -32,7 +32,7 @@ func NewRabbitMQ(config *Config, logger log.Logger) *rabbitMQ {
 	url := fmt.Sprintf(config.Url, config.UserName, config.Password, config.Endpoint, config.Vhost)
 	conn, err := amqp.Dial(url)
 	if err != nil {
-		helper.Fatalf("Failed to connect to Config: %s", err)
+		helper.Fatalf("Failed to connect to rabbitMQ: %s", err)
 	}
 
 	// 建立通道
@@ -47,10 +47,10 @@ func NewRabbitMQ(config *Config, logger log.Logger) *rabbitMQ {
 	}
 }
 
-func (r *rabbitMQ) Publish(ctx context.Context, msg []byte) error {
+func (r *rabbitMQ) Publish(ctx context.Context, topic string, msg []byte) error {
 	// 声明消息队列
 	_, err := r.ch.QueueDeclare(
-		r.config.Topic,
+		topic,
 		false,
 		false,
 		false,
@@ -63,10 +63,10 @@ func (r *rabbitMQ) Publish(ctx context.Context, msg []byte) error {
 
 	// 发布消息到指定的消息队列
 	err = r.ch.Publish(
-		"",             // exchange
-		r.config.Topic, // routing key
-		false,          // mandatory
-		false,          // immediate
+		"",    // exchange
+		topic, // routing key
+		false, // mandatory
+		false, // immediate
 		amqp.Publishing{
 			ContentType: "text/plain",
 			Body:        msg,

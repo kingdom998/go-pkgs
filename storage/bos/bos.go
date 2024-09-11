@@ -8,6 +8,7 @@ import (
 )
 
 type Config struct {
+	Driver   string `json:"driver"`
 	Endpoint string `json:"endpoint,omitempty"`
 	Ak       string `json:"ak,omitempty"`
 	Sk       string `json:"sk,omitempty"`

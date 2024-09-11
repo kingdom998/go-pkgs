@@ -111,10 +111,10 @@ func (r *rocketMQ) newConsumer(conf *Config) rocketmq.PullConsumer {
 	return c
 }
 
-func (r *rocketMQ) Publish(ctx context.Context, body []byte) (err error) {
+func (r *rocketMQ) Publish(ctx context.Context, topic string, body []byte) (err error) {
 	// 构造消息内容
 	mq := &primitive.Message{
-		Topic: r.config.Topic, // 设置topic名称
+		Topic: topic, // 设置topic名称
 		Body:  body,
 	}
 	// 发送消息

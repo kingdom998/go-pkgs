@@ -11,13 +11,13 @@ import (
 )
 
 type Config struct {
-	HTTP     http.Config     `json:"http"`
-	Redis    redis.Config    `json:"redis"`
-	RabbitMQ rabbitMQ.Config `json:"rabbitMQ"`
-	Storage  bos.Config      `json:"storage"`
-	WebUI    http.Config     `json:"webUI"`
-	ComfyUI  http.Config     `json:"comfyUI"`
-	Openai   http.Config     `json:"openai"`
+	HTTP    http.Config     `json:"http"`
+	Redis   redis.Config    `json:"redis"`
+	MQ      rabbitMQ.Config `json:"mq"`
+	Storage bos.Config      `json:"storage"`
+	WebUI   http.Config     `json:"webUI"`
+	ComfyUI http.Config     `json:"comfyUI"`
+	Worker  http.Config     `json:"openai"`
 }
 
 func New(confFile string) *Config {
