@@ -3,6 +3,7 @@ package conf
 import (
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/kingdom998/go-pkgs/cache/redis"
+	"github.com/kingdom998/go-pkgs/db/mysql"
 	"github.com/kingdom998/go-pkgs/http"
 	"github.com/kingdom998/go-pkgs/mq/rabbitMQ"
 	"github.com/kingdom998/go-pkgs/storage/bos"
@@ -12,6 +13,7 @@ import (
 
 type Config struct {
 	HTTP    http.Config     `json:"http"`
+	DB      mysql.Config    `json:"db"`
 	Redis   redis.Config    `json:"redis"`
 	MQ      rabbitMQ.Config `json:"mq"`
 	Storage bos.Config      `json:"storage"`

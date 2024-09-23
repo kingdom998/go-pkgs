@@ -19,7 +19,7 @@ type Config struct {
 }
 
 func NewClient(conf *Config, logger log.Logger) *redis.Client {
-	helper := log.NewHelper(log.With(logger, "module", "ai-server/data/redis"))
+	helper := log.NewHelper(log.With(logger, "module", "service/data/redis"))
 	rdb := redis.NewClient(&redis.Options{
 		Addr:         conf.Addr,
 		Password:     conf.Password,

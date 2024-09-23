@@ -18,7 +18,7 @@ type Config struct {
 }
 
 func NewClient(conf *Config, logger log.Logger) *gorm.DB {
-	helper := log.NewHelper(log.With(logger, "module", "marvel-service/data/gorm"))
+	helper := log.NewHelper(log.With(logger, "module", "service/data/gorm"))
 	db, err := gorm.Open(mysql.Open(conf.Source), &gorm.Config{})
 	if err != nil {
 		helper.Fatalf("failed opening connection to mysql: %v", err)
@@ -27,12 +27,12 @@ func NewClient(conf *Config, logger log.Logger) *gorm.DB {
 	// db tracing init
 	err = db.Use(otelgorm.NewPlugin())
 	if err != nil {
-		helper.Fatalf("marvel service orm tracing init error: %v", err)
+		helper.Fatalf("service orm tracing init error: %v", err)
 	}
 
 	sqlDB, err := db.DB()
 	if err != nil {
-		helper.Fatalf("marvel service orm error: %v", err)
+		helper.Fatalf("service orm error: %v", err)
 	}
 
 	// 置连接池中空闲连接的最大数量。
