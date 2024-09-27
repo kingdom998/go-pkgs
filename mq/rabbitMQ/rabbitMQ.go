@@ -9,15 +9,15 @@ import (
 )
 
 type Config struct {
-	Url        string
-	Endpoint   string
-	UserName   string
-	Password   string
-	Vhost      string
-	Exchange   string
-	Topic      string
-	Group      string
-	RetryCount int32
+	Endpoint     string
+	Port         int
+	UserName     string
+	Password     string
+	Vhost        string
+	Exchange     string
+	ExchangeType string
+	Topic        string
+	RetryCount   int32
 }
 
 type rabbitMQ struct {
@@ -29,7 +29,7 @@ type rabbitMQ struct {
 
 func NewRabbitMQ(config *Config, logger log.Logger) *rabbitMQ {
 	helper := log.NewHelper(log.With(logger, "module", "pkgs/mq/rabbitMQ"))
-	url := fmt.Sprintf(config.Url, config.UserName, config.Password, config.Endpoint, config.Vhost)
+	url := fmt.Sprintf("amqp://%s:%s@%s:%d/%s", config.UserName, config.Password, config.Endpoint, config.Port, config.Vhost)
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		helper.Fatalf("Failed to connect to rabbitMQ: %s", err)
@@ -63,6 +63,33 @@ func (r *rabbitMQ) Publish(ctx context.Context, topic string, msg []byte) error 
 	// 发布消息到指定的消息队列
 	err = r.ch.Publish(
 		"",    // exchange
+		topic, // routing key
+		false, // mandatory
+		false, // immediate
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        msg,
+		})
+	return err
+}
+
+func (r *rabbitMQ) PublishWithEx(ctx context.Context, topic string, msg []byte) error {
+	err := r.ch.ExchangeDeclare(
+		r.config.Exchange,
+		r.config.ExchangeType,
+		true,  // durable
+		false, // auto-deleted
+		false, // internal
+		false, // no-wait
+		nil,   // arguments
+	)
+	if err != nil {
+		log.Fatalf("Failed to declare an exchange: %s", err)
+	}
+
+	// 发布消息到指定的消息队列
+	err = r.ch.Publish(
+		r.config.Exchange,
 		topic, // routing key
 		false, // mandatory
 		false, // immediate
