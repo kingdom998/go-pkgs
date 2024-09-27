@@ -57,8 +57,7 @@ func (r *rabbitMQ) Publish(ctx context.Context, topic string, msg []byte) error 
 		false,
 		nil)
 	if err != nil {
-		r.log.Fatalf("Failed to declare a queue: %s", err)
-		return err
+		log.Fatalf("Failed to declare an exchange: %s", err)
 	}
 
 	// 发布消息到指定的消息队列
@@ -78,13 +77,16 @@ func (r *rabbitMQ) Subscribe(ctx context.Context, callback func(context.Context,
 	// 创建消费者并消费指定消息队列中的消息
 	msgList, err := r.ch.Consume(
 		r.config.Topic, // message-queue
-		"",             // consumer
+		"consumer",     // todo 后续进行传参
 		false,          // 设置为非自动确认(可根据需求自己选择)
 		false,          // exclusive
 		false,          // no-local
 		false,          // no-wait
 		nil,            // args
 	)
+	if err != nil {
+		r.log.Fatalf("new consume client failed with err %v", err)
+	}
 
 	for d := range msgList {
 		err = callback(ctx, d.Body)
