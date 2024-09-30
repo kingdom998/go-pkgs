@@ -64,7 +64,7 @@ func (s *storage) Download2File(ctx context.Context, objectPath, localpath strin
 		return
 	}
 
-	err = bucket.GetObjectToFile(objectPath, localpath)
+	err = bucket.DownloadFile(objectPath, localpath, 100*1024, oss.Routines(3), oss.Checkpoint(true, ""))
 	return
 }
 
