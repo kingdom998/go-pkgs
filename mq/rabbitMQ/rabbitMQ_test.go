@@ -16,8 +16,8 @@ var (
 
 func init() {
 	config = Config{
-		Url:      os.Getenv("url"),
 		Endpoint: os.Getenv("endpoint"),
+		Port:     os.Getenv("port"),
 		UserName: os.Getenv("username"),
 		Password: os.Getenv("password"),
 		Vhost:    os.Getenv("vhost"),

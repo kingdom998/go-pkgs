@@ -10,7 +10,7 @@ import (
 
 type Config struct {
 	Endpoint     string
-	Port         int
+	Port         string
 	UserName     string
 	Password     string
 	Vhost        string
@@ -29,7 +29,7 @@ type rabbitMQ struct {
 
 func NewRabbitMQ(config *Config, logger log.Logger) *rabbitMQ {
 	helper := log.NewHelper(log.With(logger, "module", "pkgs/mq/rabbitMQ"))
-	url := fmt.Sprintf("amqp://%s:%s@%s:%d/%s", config.UserName, config.Password, config.Endpoint, config.Port, config.Vhost)
+	url := fmt.Sprintf("amqp://%s:%s@%s:%s/%s", config.UserName, config.Password, config.Endpoint, config.Port, config.Vhost)
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		helper.Fatalf("Failed to connect to rabbitMQ: %s", err)
@@ -121,7 +121,7 @@ func (r *rabbitMQ) Subscribe(ctx context.Context, callback func(context.Context,
 			r.log.Fatalf("Failed to handle %s with %s", d.Body, err)
 		}
 		// 手动回复ack
-		d.Ack(false)
+		d.Ack(true)
 	}
 
 	return err
