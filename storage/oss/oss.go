@@ -50,7 +50,7 @@ func (s *storage) UploadFromFile(ctx context.Context, objectPath, localObjectPat
 		return "", err
 	}
 
-	err = bucket.PutObjectFromFile(objectPath, localObjectPath)
+	err = bucket.UploadFile(objectPath, localObjectPath, 100*1024, oss.Routines(3), oss.Checkpoint(true, ""))
 	if err != nil {
 		return "", err
 	}
