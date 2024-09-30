@@ -3,7 +3,9 @@ package oss
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
 	"testing"
 
 	_ "github.com/joho/godotenv/autoload"
@@ -55,5 +57,33 @@ func TestDownloadFile(t *testing.T) {
 	err := client.Download2File(ctx, objectPath, "../"+localFilePath)
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestUploadModels(t *testing.T) {
+	localDir := os.Getenv("localModelsDir")
+	ossDir := os.Getenv("ossModelsDir")
+	err := filepath.Walk(localDir, func(localFilePath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			relativePath, inErr := filepath.Rel(localDir, localFilePath)
+			if inErr != nil {
+				return inErr
+			}
+			cosFilePath := filepath.Join(ossDir, relativePath)
+			cosFilePath = filepath.ToSlash(cosFilePath) // 转换为 UNIX 风格路径
+			fmt.Println("uploading ", localFilePath)
+			_, err = client.UploadFromFile(context.Background(), cosFilePath, localFilePath)
+			if err != nil {
+				return fmt.Errorf("failed to upload %s to %s: %w", localFilePath, cosFilePath, err)
+			}
+			log.Printf("Uploaded %s to %s successfully.", localFilePath, cosFilePath)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("upload objects failed with %v", err)
 	}
 }
