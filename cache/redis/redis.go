@@ -9,7 +9,9 @@ import (
 )
 
 type Config struct {
+	Driver       string
 	Addr         string
+	UserName     string
 	Password     string
 	Db           int64
 	PoolSize     int32
@@ -22,6 +24,7 @@ func NewClient(conf *Config, logger log.Logger) *redis.Client {
 	helper := log.NewHelper(log.With(logger, "module", "service/data/redis"))
 	rdb := redis.NewClient(&redis.Options{
 		Addr:         conf.Addr,
+		Username:     conf.UserName,
 		Password:     conf.Password,
 		DB:           int(conf.Db),
 		ReadTimeout:  conf.ReadTimeout,
