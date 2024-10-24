@@ -1,4 +1,4 @@
-package redis
+package mysql
 
 import (
 	"os"
@@ -14,12 +14,12 @@ var (
 
 func init() {
 	config = Config{
-		Addr:     os.Getenv("addr"),
-		UserName:  os.Getenv("user"),
-		Password: os.Getenv("password"),
-		Db: 1,
+		Driver:  os.Getenv("driver"),
+		Source:  os.Getenv("source"),
+		MaxIdle: 20,
+		MaxOpen: 20,
 	}
-	log.Infof("config is %v\n", config)
+	log.Infof("config is %v", config)
 }
 
 func TestNewClient(t *testing.T) {
