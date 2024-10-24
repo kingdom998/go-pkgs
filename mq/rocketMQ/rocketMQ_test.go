@@ -8,16 +8,14 @@ import (
 
 	"github.com/go-kratos/kratos/v2/log"
 	_ "github.com/joho/godotenv/autoload"
-
-	"github.com/kingdom998/go-pkgs/conf"
 )
 
 var (
-	config conf.RocketMQ
+	config Config
 )
 
 func init() {
-	config = conf.RocketMQ{
+	config = Config{
 		Endpoint:   os.Getenv("endpoint"),
 		SecretKey:  os.Getenv("secret_key"),
 		AccessKey:  os.Getenv("access_key"),
@@ -47,7 +45,7 @@ func TestSubscribe(t *testing.T) {
 	logger := log.GetLogger()
 	client := NewRocketMQ(&config, logger)
 	ctx := context.Background()
-	client.Subscribe(ctx, config.Topic, func(ctx context.Context, body []byte) error {
+	client.Subscribe(ctx, func(ctx context.Context, body []byte) error {
 		log.Infof(string(body))
 		return nil
 	})
