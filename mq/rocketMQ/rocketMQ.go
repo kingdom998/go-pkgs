@@ -12,10 +12,11 @@ import (
 )
 
 type Config struct {
+	Driver     string `json:"driver,omitempty"`
 	LogLevel   string `json:"log_level,omitempty"`
 	Endpoint   string `json:"endpoint,omitempty"`
-	SecretKey  string `json:"secret_key,omitempty"`
 	AccessKey  string `json:"access_key,omitempty"`
+	SecretKey  string `json:"secret_key,omitempty"`
 	Namespace  string `json:"namespace,omitempty"`
 	Topic      string `json:"topic,omitempty"`
 	Group      string `json:"group,omitempty"`
@@ -30,7 +31,7 @@ type rocketMQ struct {
 	consumer rmq.SimpleConsumer
 }
 
-func NewRocketMQ(conf *Config, logger log.Logger) *rocketMQ {
+func New(conf *Config, logger log.Logger) *rocketMQ {
 	helper := log.NewHelper(log.With(logger, "module", "pkgs/mq/rocketMQ"))
 	os.Setenv("mq.consoleAppender.enabled", "true")
 	os.Setenv("rocketmq.client.logLevel", "warn")
@@ -61,6 +62,7 @@ func (r *rocketMQ) Finalise() {
 func (r *rocketMQ) newProducer(conf *Config) rmq.Producer {
 	producer, err := rmq.NewProducer(&rmq.Config{
 		Endpoint:      conf.Endpoint,
+		NameSpace:     conf.Namespace,
 		ConsumerGroup: conf.Group,
 		Credentials: &credentials.SessionCredentials{
 			AccessKey:    conf.AccessKey,
@@ -84,6 +86,7 @@ func (r *rocketMQ) newConsumer(conf *Config) rmq.SimpleConsumer {
 	cosumerConf := &rmq.Config{
 		Endpoint:      conf.Endpoint,
 		ConsumerGroup: conf.Group,
+		NameSpace:     conf.Namespace,
 		Credentials: &credentials.SessionCredentials{
 			AccessKey:    conf.AccessKey,
 			AccessSecret: conf.SecretKey,

@@ -30,7 +30,7 @@ func init() {
 func TestPublish(t *testing.T) {
 	ctx := context.Background()
 	logger := log.NewStdLogger(os.Stdout)
-	client := NewRocketMQ(&config, logger)
+	client := New(&config, logger)
 	msg := "this is rockemq " + time.Now().Format("2006-01-02 15:04:05")
 	for i := 0; i < 5; i++ {
 		err := client.Publish(ctx, config.Topic, []byte(msg))
@@ -43,7 +43,7 @@ func TestPublish(t *testing.T) {
 
 func TestSubscribe(t *testing.T) {
 	logger := log.GetLogger()
-	client := NewRocketMQ(&config, logger)
+	client := New(&config, logger)
 	ctx := context.Background()
 	client.Subscribe(ctx, func(ctx context.Context, body []byte) error {
 		log.Infof(string(body))

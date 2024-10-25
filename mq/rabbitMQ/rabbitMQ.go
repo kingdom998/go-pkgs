@@ -27,7 +27,7 @@ type rabbitMQ struct {
 	ch     *amqp.Channel
 }
 
-func NewRabbitMQ(config *Config, logger log.Logger) *rabbitMQ {
+func New(config *Config, logger log.Logger) *rabbitMQ {
 	helper := log.NewHelper(log.With(logger, "module", "pkgs/mq/rabbitMQ"))
 	url := fmt.Sprintf("amqp://%s:%s@%s:%s/%s", config.UserName, config.Password, config.Endpoint, config.Port, config.Vhost)
 	conn, err := amqp.Dial(url)

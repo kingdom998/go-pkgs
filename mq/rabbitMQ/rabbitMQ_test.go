@@ -29,7 +29,7 @@ func init() {
 func TestPublish(t *testing.T) {
 	ctx := context.Background()
 	logger := log.NewStdLogger(os.Stdout)
-	client := NewRabbitMQ(&config, logger)
+	client := New(&config, logger)
 	msg := "welcome at " + time.Now().Format("2006-01-02 15:04:05")
 	log.Info("start send message...\n")
 	for i := 0; i < 5; i++ {
@@ -43,7 +43,7 @@ func TestPublish(t *testing.T) {
 
 func TestSubscribe(t *testing.T) {
 	logger := log.GetLogger()
-	client := NewRabbitMQ(&config, logger)
+	client := New(&config, logger)
 	ctx := context.Background()
 	log.Info("start recieve message...\n")
 	client.Subscribe(ctx, func(ctx context.Context, body []byte) error {

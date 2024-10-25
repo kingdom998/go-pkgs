@@ -5,7 +5,7 @@ import (
 	"github.com/kingdom998/go-pkgs/cache/redis"
 	"github.com/kingdom998/go-pkgs/db/mysql"
 	"github.com/kingdom998/go-pkgs/http"
-	"github.com/kingdom998/go-pkgs/mq/rabbitMQ"
+	"github.com/kingdom998/go-pkgs/mq/rocketMQ"
 	"github.com/kingdom998/go-pkgs/storage/bos"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
@@ -15,7 +15,7 @@ type Config struct {
 	HTTP    http.Config     `json:"http"`
 	DB      mysql.Config    `json:"db"`
 	Redis   redis.Config    `json:"redis"`
-	MQ      rabbitMQ.Config `json:"mq"`
+	MQ      rocketMQ.Config `json:"mq"`
 	Storage bos.Config      `json:"storage"`
 	WebUI   http.Config     `json:"webUI"`
 	ComfyUI http.Config     `json:"comfyUI"`
