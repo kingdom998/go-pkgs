@@ -15,7 +15,7 @@ var (
 func init() {
 	config = Config{
 		Addr:     os.Getenv("addr"),
-		UserName:  os.Getenv("user"),
+		Username:  os.Getenv("user"),
 		Password: os.Getenv("password"),
 		Db: 1,
 	}
