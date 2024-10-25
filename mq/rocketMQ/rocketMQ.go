@@ -2,16 +2,17 @@ package rocketMQ
 
 import (
 	"context"
+	"os"
 	"time"
 
-	"github.com/apache/rocketmq-client-go/v2"
-	"github.com/apache/rocketmq-client-go/v2/consumer"
-	"github.com/apache/rocketmq-client-go/v2/primitive"
-	"github.com/apache/rocketmq-client-go/v2/producer"
+	rmq "github.com/apache/rocketmq-clients/golang/v5"
+	"github.com/apache/rocketmq-clients/golang/v5/credentials"
+	v2 "github.com/apache/rocketmq-clients/golang/v5/protocol/v2"
 	"github.com/go-kratos/kratos/v2/log"
 )
 
 type Config struct {
+	LogLevel   string `json:"log_level,omitempty"`
 	Endpoint   string `json:"endpoint,omitempty"`
 	SecretKey  string `json:"secret_key,omitempty"`
 	AccessKey  string `json:"access_key,omitempty"`
@@ -25,128 +26,130 @@ type rocketMQ struct {
 	log *log.Helper
 
 	config   *Config
-	producer rocketmq.Producer
-	consumer rocketmq.PullConsumer
+	producer rmq.Producer
+	consumer rmq.SimpleConsumer
 }
 
-func NewRocketMQ(config *Config, logger log.Logger) *rocketMQ {
+func NewRocketMQ(conf *Config, logger log.Logger) *rocketMQ {
 	helper := log.NewHelper(log.With(logger, "module", "pkgs/mq/rocketMQ"))
+	os.Setenv("mq.consoleAppender.enabled", "true")
+	os.Setenv("rocketmq.client.logLevel", "warn")
+	if conf.LogLevel != "" {
+		os.Setenv("rocketmq.client.logLevel", conf.LogLevel) // 设置日志等级
+	}
+	rmq.ResetLogger()
 
 	r := &rocketMQ{
-		config: config,
+		config: conf,
 		log:    helper,
 	}
-	r.producer = r.newProducer(config)
-	r.consumer = r.newConsumer(config)
+	r.producer = r.newProducer(conf)
+	r.consumer = r.newConsumer(conf)
 
 	return r
 }
 
-func (r *rocketMQ) newProducer(conf *Config) rocketmq.Producer {
-	// 创建消息生产者
-	p, err := rocketmq.NewProducer(
-		producer.WithNsResolver(primitive.NewPassthroughResolver([]string{conf.Endpoint})), // 设置服务地址
-		// 设置acl权限
-		producer.WithCredentials(primitive.Credentials{
-			SecretKey: conf.SecretKey,
-			AccessKey: conf.AccessKey,
-		}),
-		producer.WithNamespace(conf.Namespace),   // 设置命名空间名称
-		producer.WithRetry(int(conf.RetryCount)), // 设置发送失败重试次数
-	)
-	if err != nil {
-		r.log.Fatalf("init producer error: %v", err)
+func (r *rocketMQ) Finalise() {
+	if r.producer != nil {
+		r.producer.GracefulStop()
 	}
-
-	// 启动producer
-	err = p.Start()
-	if err != nil {
-		r.log.Fatalf("start producer error: %v", err)
+	if r.consumer != nil {
+		r.consumer.GracefulStop()
 	}
-	return p
 }
 
-func (r *rocketMQ) newConsumer(conf *Config) rocketmq.PullConsumer {
-	var nameSrv, err = primitive.NewNamesrvAddr(conf.Endpoint)
-	if err != nil {
-		r.log.Fatalf("NewNamesrvAddr err: %v", err)
-	}
-
-	pullConsumer, err := rocketmq.NewPullConsumer(
-		consumer.WithGroupName(conf.Group),
-		consumer.WithNameServer(nameSrv),
-		consumer.WithCredentials(primitive.Credentials{
-			AccessKey: conf.AccessKey,
-			SecretKey: conf.SecretKey,
-		}),
-		consumer.WithNamespace(conf.Namespace),
-		consumer.WithMaxReconsumeTimes(conf.RetryCount),
-		consumer.WithConsumeFromWhere(consumer.ConsumeFromFirstOffset), // 设置从起始位置开始消费
-		consumer.WithConsumerModel(consumer.Clustering),                // 设置消费模式（默认集群模式）
-	)
-
-	c, err := rocketmq.NewPullConsumer(
-		consumer.WithGroupName(conf.Group),                                                 // 设置消费者组
-		consumer.WithNsResolver(primitive.NewPassthroughResolver([]string{conf.Endpoint})), // 设置服务地址
-		// 设置acl权限
-		consumer.WithCredentials(primitive.Credentials{
-			SecretKey: conf.SecretKey,
-			AccessKey: conf.AccessKey,
-		}),
-		consumer.WithNamespace(conf.Namespace),                         // 设置命名空间名称
-		consumer.WithConsumeFromWhere(consumer.ConsumeFromFirstOffset), // 设置从起始位置开始消费
-		consumer.WithConsumerModel(consumer.Clustering),                // 设置消费模式（默认集群模式）
+func (r *rocketMQ) newProducer(conf *Config) rmq.Producer {
+	producer, err := rmq.NewProducer(&rmq.Config{
+		Endpoint:      conf.Endpoint,
+		ConsumerGroup: conf.Group,
+		Credentials: &credentials.SessionCredentials{
+			AccessKey:    conf.AccessKey,
+			AccessSecret: conf.SecretKey,
+		},
+	},
+		rmq.WithTopics(conf.Topic),
 	)
 	if err != nil {
-		r.log.Fatalf("init consumer error: %v", err)
+		log.Fatal(err)
 	}
-	err = pullConsumer.Subscribe(conf.Topic, consumer.MessageSelector{})
+	// start producer
+	err = producer.Start()
 	if err != nil {
-		r.log.Fatalf("fail to Subscribe: %v", err)
+		log.Fatal(err)
 	}
-	err = pullConsumer.Start()
+	return producer
+}
+
+func (r *rocketMQ) newConsumer(conf *Config) rmq.SimpleConsumer {
+	cosumerConf := &rmq.Config{
+		Endpoint:      conf.Endpoint,
+		ConsumerGroup: conf.Group,
+		Credentials: &credentials.SessionCredentials{
+			AccessKey:    conf.AccessKey,
+			AccessSecret: conf.SecretKey,
+		},
+	}
+	consumer, err := rmq.NewSimpleConsumer(cosumerConf,
+		rmq.WithSubscriptionExpressions(map[string]*rmq.FilterExpression{
+			conf.Topic: rmq.SUB_ALL,
+		}),
+		rmq.WithAwaitDuration(time.Second*5),
+	)
 	if err != nil {
-		r.log.Fatalf("fail to Start: %v", err)
+		log.Fatal(err)
 	}
-	return c
+	// start simpleConsumer
+	err = consumer.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return consumer
 }
 
 func (r *rocketMQ) Publish(ctx context.Context, topic string, body []byte) (err error) {
 	// 构造消息内容
-	mq := &primitive.Message{
+	msg := &rmq.Message{
 		Topic: topic, // 设置topic名称
 		Body:  body,
 	}
 	// 发送消息
-	res, err := r.producer.SendSync(ctx, mq)
+	srs, err := r.producer.Send(ctx, msg)
 	if err != nil {
-		r.log.Warnf("send message error: %v", err)
+		r.log.Warnw("msg", "send message failed", "err", err)
 		return
 	}
-	r.log.Infof("send message success: result=%s\n", res.String())
+	for _, sr := range srs {
+		r.log.Infow("msg", "send message success", "msg_id", sr.MessageID)
+	}
 
 	return
 
 }
 
 func (r *rocketMQ) Subscribe(ctx context.Context, callback func(context.Context, []byte) error) (err error) {
-	r.consumer.Start()
 	for {
-		cr, err := r.consumer.Poll(ctx, time.Second*5)
-		if consumer.IsNoNewMsgError(err) {
-			continue
+		mvs, err := r.consumer.Receive(ctx, 1, 10*time.Second)
+		if err != nil {
+			status, _ := rmq.AsErrRpcStatus(err)
+			if status.GetCode() == int32(v2.Code_MESSAGE_NOT_FOUND) {
+				continue
+			}
+			r.log.Warnw("msg", "receive msg error", "err", err)
+			break
+		}
+		// ack message
+		for _, mv := range mvs {
+			callback(ctx, mv.GetBody())
+			err = r.consumer.Ack(ctx, mv)
+			if err != nil {
+				r.log.Warnw("msg", "ack msg error", "err", err)
+				break
+			}
 		}
 		if err != nil {
-			r.log.Warnw("msg", "pull consumer error", "err", err)
-			time.Sleep(time.Second)
-			continue
+			break
 		}
-		for _, msg := range cr.GetMsgList() {
-			err = callback(ctx, msg.Body)
-		}
-		r.consumer.ACK(ctx, cr, consumer.ConsumeSuccess)
 	}
 
-	return
-
+	return err
 }

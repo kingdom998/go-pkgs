@@ -17,8 +17,8 @@ var (
 func init() {
 	config = Config{
 		Endpoint:   os.Getenv("endpoint"),
-		SecretKey:  os.Getenv("secret_key"),
 		AccessKey:  os.Getenv("access_key"),
+		SecretKey:  os.Getenv("secret_key"),
 		Namespace:  os.Getenv("namespace"),
 		Topic:      os.Getenv("topic"),
 		Group:      os.Getenv("group"),
@@ -27,11 +27,11 @@ func init() {
 	log.Infof("load config %+v", config)
 }
 
-func TestSendMessage(t *testing.T) {
+func TestPublish(t *testing.T) {
 	ctx := context.Background()
 	logger := log.NewStdLogger(os.Stdout)
 	client := NewRocketMQ(&config, logger)
-	msg := "welcome at " + time.Now().Format("2006-01-02 15:04:05")
+	msg := "this is rockemq " + time.Now().Format("2006-01-02 15:04:05")
 	for i := 0; i < 5; i++ {
 		err := client.Publish(ctx, config.Topic, []byte(msg))
 		if err != nil {
@@ -49,4 +49,5 @@ func TestSubscribe(t *testing.T) {
 		log.Infof(string(body))
 		return nil
 	})
+	defer client.Finalise()
 }
