@@ -18,7 +18,7 @@ func init() {
 	config = Config{
 		Endpoint: os.Getenv("endpoint"),
 		Port:     os.Getenv("port"),
-		UserName: os.Getenv("username"),
+		Username: os.Getenv("username"),
 		Password: os.Getenv("password"),
 		Vhost:    os.Getenv("vhost"),
 		Topic:    os.Getenv("route"),

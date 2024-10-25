@@ -9,15 +9,17 @@ import (
 )
 
 type Config struct {
-	Endpoint     string
-	Port         string
-	UserName     string
-	Password     string
-	Vhost        string
-	Exchange     string
-	ExchangeType string
-	Topic        string
-	RetryCount   int32
+	Endpoint     string `json:"endpoint,omitempty"`
+	Port         string `json:"port,omitempty"`
+	Username     string `json:"username,omitempty"`
+	Password     string `json:"password,omitempty"`
+	Vhost        string `json:"vhost,omitempty"`
+	Exchange     string `json:"exchange,omitempty"`
+	ExchangeType string `json:"exchange_type,omitempty"`
+	Topic        string `json:"topic,omitempty"`
+	TopicPrefix  string `json:"topic_prefix,omitempty"`
+
+	RetryCount int32
 }
 
 type rabbitMQ struct {
@@ -29,7 +31,7 @@ type rabbitMQ struct {
 
 func New(config *Config, logger log.Logger) *rabbitMQ {
 	helper := log.NewHelper(log.With(logger, "module", "pkgs/mq/rabbitMQ"))
-	url := fmt.Sprintf("amqp://%s:%s@%s:%s/%s", config.UserName, config.Password, config.Endpoint, config.Port, config.Vhost)
+	url := fmt.Sprintf("amqp://%s:%s@%s:%s/%s", config.Username, config.Password, config.Endpoint, config.Port, config.Vhost)
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		helper.Fatalf("Failed to connect to rabbitMQ: %s", err)
@@ -46,7 +48,6 @@ func New(config *Config, logger log.Logger) *rabbitMQ {
 		log:    helper,
 	}
 }
-
 
 func (r *rabbitMQ) Finalise() {
 	if r.ch != nil {

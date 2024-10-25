@@ -12,15 +12,16 @@ import (
 )
 
 type Config struct {
-	Driver     string `json:"driver,omitempty"`
-	LogLevel   string `json:"log_level,omitempty"`
-	Endpoint   string `json:"endpoint,omitempty"`
-	AccessKey  string `json:"access_key,omitempty"`
-	SecretKey  string `json:"secret_key,omitempty"`
-	Namespace  string `json:"namespace,omitempty"`
-	Topic      string `json:"topic,omitempty"`
-	Group      string `json:"group,omitempty"`
-	RetryCount int32  `json:"retry_count,omitempty"`
+	Driver      string `json:"driver,omitempty"`
+	LogLevel    string `json:"log_level,omitempty"`
+	Endpoint    string `json:"endpoint,omitempty"`
+	AccessKey   string `json:"access_key,omitempty"`
+	SecretKey   string `json:"secret_key,omitempty"`
+	Namespace   string `json:"namespace,omitempty"`
+	Topic       string `json:"topic,omitempty"`
+	TopicPrefix string `json:"topic_prefix,omitempty"`
+	Group       string `json:"group,omitempty"`
+	RetryCount  int32  `json:"retry_count,omitempty"`
 }
 
 type rocketMQ struct {
