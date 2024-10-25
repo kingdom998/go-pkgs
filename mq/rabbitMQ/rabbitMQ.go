@@ -47,6 +47,13 @@ func NewRabbitMQ(config *Config, logger log.Logger) *rabbitMQ {
 	}
 }
 
+
+func (r *rabbitMQ) Finalise() {
+	if r.ch != nil {
+		r.ch.Close()
+	}
+}
+
 func (r *rabbitMQ) Publish(ctx context.Context, topic string, msg []byte) error {
 	// 声明消息队列
 	_, err := r.ch.QueueDeclare(
