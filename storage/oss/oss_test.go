@@ -3,11 +3,11 @@ package oss
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/go-kratos/kratos/v2/log"
 	_ "github.com/joho/godotenv/autoload"
 )
 
@@ -25,6 +25,7 @@ func init() {
 	}
 
 	client = NewClient(&config)
+	log.Infof("config is : %#v", config)
 }
 
 func TestListBuckets(t *testing.T) {
@@ -79,7 +80,7 @@ func TestUploadModels(t *testing.T) {
 			if err != nil {
 				return fmt.Errorf("failed to upload %s to %s: %w", localFilePath, cosFilePath, err)
 			}
-			log.Printf("Uploaded %s to %s successfully.", localFilePath, cosFilePath)
+			log.Infof("Uploaded %s to %s successfully.", localFilePath, cosFilePath)
 		}
 		return nil
 	})

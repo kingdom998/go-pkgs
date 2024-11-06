@@ -6,7 +6,7 @@ import (
 	"github.com/kingdom998/go-pkgs/db/mysql"
 	"github.com/kingdom998/go-pkgs/http"
 	"github.com/kingdom998/go-pkgs/mq/rocketMQ"
-	"github.com/kingdom998/go-pkgs/storage/bos"
+	"github.com/kingdom998/go-pkgs/storage/oss"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 )
@@ -16,7 +16,7 @@ type Config struct {
 	DB      mysql.Config    `json:"db"`
 	Redis   redis.Config    `json:"redis"`
 	MQ      rocketMQ.Config `json:"mq"`
-	Storage bos.Config      `json:"storage"`
+	Storage oss.Config      `json:"storage"`
 	WebUI   http.Config     `json:"webUI"`
 	ComfyUI http.Config     `json:"comfyUI"`
 	Worker  http.Config     `json:"worker"`
