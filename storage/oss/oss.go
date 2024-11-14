@@ -55,7 +55,7 @@ func (s *storage) UploadFromFile(ctx context.Context, objectPath, localObjectPat
 		return "", err
 	}
 
-	return objectPath, nil
+	return fmt.Sprintf("https://%s.%s/%s", s.config.Bucket, s.config.Endpoint, objectPath), nil
 }
 
 func (s *storage) Download2File(ctx context.Context, objectPath, localpath string) (err error) {
@@ -79,5 +79,5 @@ func (s *storage) UploadFromBytes(ctx context.Context, objectPath string, body [
 		return "", err
 	}
 
-	return objectPath, nil
+	return fmt.Sprintf("https://%s.%s/%s", s.config.Bucket, s.config.Endpoint, objectPath), nil
 }

@@ -26,6 +26,7 @@ func init() {
 	log.Infof("config is : %#v", config)
 
 	client = NewClient(&config)
+	log.Infof("config is : %#v", config)
 }
 
 func TestListBuckets(t *testing.T) {
