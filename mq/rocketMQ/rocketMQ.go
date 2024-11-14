@@ -135,10 +135,10 @@ func (r *rocketMQ) Subscribe(ctx context.Context, callback func(context.Context,
 		mvs, err := r.consumer.Receive(ctx, 1, 10*time.Second)
 		if err != nil {
 			status, _ := rmq.AsErrRpcStatus(err)
-			if status.GetCode() == int32(v2.Code_MESSAGE_NOT_FOUND) {
+			r.log.Warnw("msg", "receive msg failed", "err", err, "status", status)
+			if status == nil || status.GetCode() == int32(v2.Code_MESSAGE_NOT_FOUND) {
 				continue
 			}
-			r.log.Warnw("msg", "receive msg error", "err", err)
 			break
 		}
 		// ack message
